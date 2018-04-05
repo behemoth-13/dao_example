@@ -1,13 +1,13 @@
 package by.training.model;
 
-import java.util.Date;
+import java.sql.Date;
 
 public class Car {
-    int id;
-    int ownerId;
-    Date manufactureDate;
-    String brand;
-    String model;
+    private int id;
+    private int ownerId;
+    private Date manufactureDate;
+    private String brand;
+    private String model;
 
     public int getId() {
         return id;

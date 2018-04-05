@@ -1,14 +1,15 @@
 package by.training.model;
 
+
 import java.sql.Date;
 import java.util.List;
 
 public class Owner {
-    int id;
-    String firstName;
-    String lastName;
-    Date birthDate;
-    List<Car> cars;
+    private int id;
+    private String firstName;
+    private String lastName;
+    private Date birthDate;
+    private List<Car> cars;
 
     public int getId() {
         return id;

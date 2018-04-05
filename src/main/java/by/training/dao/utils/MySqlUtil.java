@@ -1,40 +1,57 @@
 package by.training.dao.utils;
 
+import com.mchange.v2.c3p0.ComboPooledDataSource;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
-import java.sql.Driver;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
 public class MySqlUtil {
     private static MySqlUtil instance = new MySqlUtil();
 
-    private String url;
-    private String login;
-    private String password;
+    private ComboPooledDataSource dataSource;
 
     private MySqlUtil() {}
-
-    public void init(String path) throws ClassNotFoundException, IllegalAccessException, InstantiationException, SQLException, IOException {
-        InputStream inputStream = getClass().getResourceAsStream("/db.properties");
-        Properties props = new Properties();
-        props.load(inputStream);
-        this.url = props.getProperty("url");
-        this.login = props.getProperty("login");
-        this.password = props.getProperty("password");
-        String driverName = props.getProperty("driverName");
-        Driver driver = (Driver) Class.forName(driverName).newInstance();
-        DriverManager.registerDriver(driver);
-        DriverManager.getConnection(url, login, password);
-    }
 
     public static MySqlUtil getInstance() {
         return instance;
     }
 
+    public void init(String path) throws IOException {
+        InputStream inputStream = getClass().getResourceAsStream("/db.properties");
+        Properties props = new Properties();
+        props.load(inputStream);
+        String url = props.getProperty("url");
+        String login = props.getProperty("login");
+        String password = props.getProperty("password");
+        int initialPoolSize = Integer.parseInt(props.getProperty("initialPoolSize"));
+        int minPoolSize = Integer.parseInt(props.getProperty("minPoolSize"));
+        int acquireIncrement = Integer.parseInt(props.getProperty("acquireIncrement"));
+        int maxPoolSize = Integer.parseInt(props.getProperty("maxPoolSize"));
+        int maxStatements = Integer.parseInt(props.getProperty("maxStatements"));
+
+        ComboPooledDataSource dataSource = new ComboPooledDataSource();
+        dataSource.setJdbcUrl(url);
+        dataSource.setUser(login);
+        dataSource.setPassword(password);
+
+        // Optional Settings
+        dataSource.setInitialPoolSize(initialPoolSize);
+        dataSource.setMinPoolSize(minPoolSize);
+        dataSource.setAcquireIncrement(acquireIncrement);
+        dataSource.setMaxPoolSize(maxPoolSize);
+        dataSource.setMaxStatements(maxStatements);
+
+        this.dataSource = dataSource;
+    }
+
     public Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(url, login, password);
+        return dataSource.getConnection();
+    }
+
+    public void destroy() {
+        dataSource.close();
     }
 }
