@@ -1,7 +1,5 @@
 package by.training.dao;
 
-import by.training.dao.utils.MySqlUtil;
-import by.training.dao.utils.Queries;
 import by.training.model.Car;
 import by.training.model.Owner;
 
@@ -12,27 +10,25 @@ import java.sql.SQLException;
 import java.util.List;
 
 public class OwnerDao {
+
+    static final String SAVE = "INSERT INTO owner(first_name, last_name, birth_date) VALUES (?, ?, ?)";
+    static final String GET_BY_ID = "SELECT first_name, last_name, birth_date FROM owner WHERE id = ?";
+    static final String UPDATE_BY_ID = "UPDATE owner SET first_name = ?, last_name = ?, birth_date = ? WHERE id = ?";
+    static final String DELETE_BY_ID = "DELETE FROM owner WHERE id = ?";
+
     private static final String COLUMN_ID = "id";
     private static final String COLUMN_FIRST_NAME = "first_name";
     private static final String COLUMN_LAST_NAME = "last_name";
     private static final String COLUMN_BIRTH_DATE = "birth_date";
 
-    private static OwnerDao instance = new OwnerDao();
-
     private MySqlUtil sqlUtil = MySqlUtil.getInstance();
-
-    private OwnerDao() {}
-
-    public static OwnerDao getInstance() {
-        return instance;
-    }
 
     public void save(Owner owner) throws DaoException {
         Connection con = null;
         PreparedStatement ps = null;
         try {
             con = sqlUtil.getConnection();
-            ps = con.prepareStatement(Queries.SAVE_OWNER);
+            ps = con.prepareStatement(SAVE);
 
             ps.setString(1, owner.getFirstName());
             ps.setString(2, owner.getLastName());
@@ -66,7 +62,7 @@ public class OwnerDao {
         try {
             con = sqlUtil.getConnection();
             con.setAutoCommit(false);
-            psOwner = con.prepareStatement(Queries.SAVE_OWNER);
+            psOwner = con.prepareStatement(SAVE);
 
             psOwner.setString(1, owner.getFirstName());
             psOwner.setString(2, owner.getLastName());
@@ -75,7 +71,7 @@ public class OwnerDao {
 
             List<Car> cars = owner.getCars();
             if (cars != null && cars.size() > 0) {
-                psCar = con.prepareStatement(Queries.SAVE_OWNER);
+                psCar = con.prepareStatement(CarDao.SAVE);
 
                 for (Car car : cars) {
                     psCar.setInt(1, car.getOwnerId());
@@ -128,7 +124,7 @@ public class OwnerDao {
         try {
 
             con = sqlUtil.getConnection();
-            ps = con.prepareStatement(Queries.GET_OWNER_BY_ID);
+            ps = con.prepareStatement(GET_BY_ID);
 
             ps.setInt(1, id);
             set = ps.executeQuery();
@@ -175,7 +171,7 @@ public class OwnerDao {
         PreparedStatement ps = null;
         try {
             con = sqlUtil.getConnection();
-            ps = con.prepareStatement(Queries.UPDATE_OWNER_BY_ID);
+            ps = con.prepareStatement(UPDATE_BY_ID);
 
             ps.setString(1, owner.getFirstName());
             ps.setString(2, owner.getLastName());
@@ -208,7 +204,7 @@ public class OwnerDao {
         PreparedStatement ps = null;
         try {
             con = sqlUtil.getConnection();
-            ps = con.prepareStatement(Queries.DELETE_OWNER_BY_ID);
+            ps = con.prepareStatement(DELETE_BY_ID);
 
             ps.setInt(1, id);
             ps.execute();

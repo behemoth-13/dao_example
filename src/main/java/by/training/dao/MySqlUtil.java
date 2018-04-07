@@ -1,4 +1,4 @@
-package by.training.dao.utils;
+package by.training.dao;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 
