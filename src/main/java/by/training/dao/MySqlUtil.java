@@ -2,6 +2,7 @@ package by.training.dao;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
@@ -20,7 +21,7 @@ public class MySqlUtil {
     }
 
     public void init(String path) throws IOException {
-        InputStream inputStream = getClass().getResourceAsStream("/db.properties");
+        InputStream inputStream = new FileInputStream(path);
         Properties props = new Properties();
         props.load(inputStream);
         String url = props.getProperty("url");

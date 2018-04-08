@@ -11,9 +11,16 @@ import java.util.List;
 
 public class CarDao {
     static final String SAVE = "INSERT INTO car(owner_id, manufacture_date, brand, model) VALUES(?, ?, ?, ?)";
-    static final String GET_ALL = "SELECT * FROM car";
-    static final String UPDATE_BY_ID = "UPDATE car SET owner_id = ?, manufacture_date = ?, brand = ?, model = ? WHERE id = ?";
-    static final String DELETE_BY_ID = "DELETE FROM car WHERE id = ?";
+    private static final String GET_ALL = "SELECT * FROM car";
+    private static final String UPDATE_BY_ID = "UPDATE car SET owner_id = ?, manufacture_date = ?, brand = ?, model = ? WHERE id = ?";
+    private static final String DELETE_BY_ID = "DELETE FROM car WHERE id = ?";
+
+    private Connection con;
+
+    private PreparedStatement save;
+    private PreparedStatement getAll;
+    private PreparedStatement updateById;
+    private PreparedStatement deleteById;
 
     private static final String COLUMN_ID = "id";
     private static final String COLUMN_OWNER_ID = "owner_id";
@@ -21,50 +28,61 @@ public class CarDao {
     private static final String COLUMN_BRAND = "brand";
     private static final String COLUMN_MODEL = "model";
 
-    private MySqlUtil sqlUtil = MySqlUtil.getInstance();
+    public void init(Connection con) throws SQLException {
+        this.con = con;
+        save = con.prepareStatement(SAVE);
+        getAll = con.prepareStatement(GET_ALL);
+        updateById = con.prepareStatement(UPDATE_BY_ID);
+        deleteById = con.prepareStatement(DELETE_BY_ID);
+    }
+
+    public void destroy() {
+        try {
+            save.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        try {
+            getAll.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        try {
+            updateById.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        try {
+            deleteById.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        try {
+            if (con != null) {
+                con.close();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 
     public void save(Car car) throws DaoException {
-        Connection con = null;
-        PreparedStatement ps = null;
         try {
-            con = sqlUtil.getConnection();
-            ps = con.prepareStatement(SAVE);
-
-            ps.setInt(1, car.getOwnerId());
-            ps.setDate(2, car.getManufactureDate());
-            ps.setString(3, car.getBrand());
-            ps.setString(4, car.getModel());
-            ps.execute();
+            save.setInt(1, car.getOwnerId());
+            save.setDate(2, car.getManufactureDate());
+            save.setString(3, car.getBrand());
+            save.setString(4, car.getModel());
+            save.execute();
         } catch (SQLException e) {
             e.printStackTrace();
             throw new DaoException(e.getMessage());
-        } finally {
-            try {
-                if (con != null) {
-                    con.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-            try {
-                if (ps != null) {
-                    ps.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
         }
     }
 
     public List<Car> getAll() throws DaoException {
-        Connection con = null;
-        PreparedStatement ps = null;
         ResultSet set = null;
         try {
-            con = sqlUtil.getConnection();
-            ps = con.prepareStatement(GET_ALL);
-
-            set = ps.executeQuery();
+            set = getAll.executeQuery();
 
             List<Car> list = new ArrayList<>();
             while (set.next()) {
@@ -88,83 +106,29 @@ public class CarDao {
             } catch (SQLException e) {
                 e.printStackTrace();
             }
-            try {
-                if (con != null) {
-                    con.close();
-                }
-            } catch (SQLException e1) {
-                e1.printStackTrace();
-            }
-            try {
-                if (ps != null) {
-                    ps.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
         }
     }
 
     public void updateById(Car car) throws DaoException {
-        Connection con = null;
-        PreparedStatement ps = null;
         try {
-            con = sqlUtil.getConnection();
-            ps = con.prepareStatement(UPDATE_BY_ID);
-
-            ps.setInt(1, car.getOwnerId());
-            ps.setDate(2, car.getManufactureDate());
-            ps.setString(3, car.getBrand());
-            ps.setString(4, car.getModel());
-            ps.executeUpdate();
+            updateById.setInt(1, car.getOwnerId());
+            updateById.setDate(2, car.getManufactureDate());
+            updateById.setString(3, car.getBrand());
+            updateById.setString(4, car.getModel());
+            updateById.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
             throw new DaoException(e.getMessage());
-        } finally {
-            try {
-                if (con != null) {
-                    con.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-            try {
-                if (ps != null) {
-                    ps.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
         }
     }
 
     public void deleteById(int id) throws DaoException {
-        Connection con = null;
-        PreparedStatement ps = null;
         try {
-            con = sqlUtil.getConnection();
-            ps = con.prepareStatement(DELETE_BY_ID);
-
-            ps.setInt(1, id);
-            ps.execute();
+            deleteById.setInt(1, id);
+            deleteById.execute();
         } catch (SQLException e) {
             e.printStackTrace();
             throw new DaoException(e.getMessage());
-        } finally {
-            try {
-                if (con != null) {
-                    con.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-            try {
-                if (ps != null) {
-                    ps.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
         }
     }
 }

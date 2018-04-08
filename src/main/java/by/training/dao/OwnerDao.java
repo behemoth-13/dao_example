@@ -11,10 +11,18 @@ import java.util.List;
 
 public class OwnerDao {
 
-    static final String SAVE = "INSERT INTO owner(first_name, last_name, birth_date) VALUES (?, ?, ?)";
-    static final String GET_BY_ID = "SELECT first_name, last_name, birth_date FROM owner WHERE id = ?";
-    static final String UPDATE_BY_ID = "UPDATE owner SET first_name = ?, last_name = ?, birth_date = ? WHERE id = ?";
-    static final String DELETE_BY_ID = "DELETE FROM owner WHERE id = ?";
+    private static final String SAVE = "INSERT INTO owner(first_name, last_name, birth_date) VALUES (?, ?, ?)";
+    private static final String GET_BY_ID = "SELECT first_name, last_name, birth_date FROM owner WHERE id = ?";
+    private static final String UPDATE_BY_ID = "UPDATE owner SET first_name = ?, last_name = ?, birth_date = ? WHERE id = ?";
+    private static final String DELETE_BY_ID = "DELETE FROM owner WHERE id = ?";
+
+    private Connection con;
+
+    private PreparedStatement save;
+    private PreparedStatement saveCars;
+    private PreparedStatement getById;
+    private PreparedStatement updateById;
+    private PreparedStatement deleteById;
 
     private static final String COLUMN_ID = "id";
     private static final String COLUMN_FIRST_NAME = "first_name";
@@ -23,62 +31,78 @@ public class OwnerDao {
 
     private MySqlUtil sqlUtil = MySqlUtil.getInstance();
 
-    public void save(Owner owner) throws DaoException {
-        Connection con = null;
-        PreparedStatement ps = null;
-        try {
-            con = sqlUtil.getConnection();
-            ps = con.prepareStatement(SAVE);
+    public void init(Connection con) throws SQLException {
+        this.con = con;
+        save = con.prepareStatement(SAVE);
+        saveCars = con.prepareStatement(CarDao.SAVE);
+        getById = con.prepareStatement(GET_BY_ID);
+        updateById = con.prepareStatement(UPDATE_BY_ID);
+        deleteById = con.prepareStatement(DELETE_BY_ID);
+    }
 
-            ps.setString(1, owner.getFirstName());
-            ps.setString(2, owner.getLastName());
-            ps.setDate(3, owner.getBirthDate());
-            ps.execute();
+    public void destroy() {
+        try {
+            save.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        try {
+            saveCars.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        try {
+            getById.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        try {
+            updateById.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        try {
+            deleteById.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        try {
+            if (con != null) {
+                con.close();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void save(Owner owner) throws DaoException {
+        try {
+            save.setString(1, owner.getFirstName());
+            save.setString(2, owner.getLastName());
+            save.setDate(3, owner.getBirthDate());
+            save.execute();
         } catch (SQLException e) {
             e.printStackTrace();
             throw new DaoException(e.getMessage());
-        } finally {
-            try {
-                if (con != null) {
-                    con.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-            try {
-                if (ps != null) {
-                    ps.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
         }
     }
 
     public void saveWithCars(Owner owner) throws DaoException {
-        Connection con = null;
-        PreparedStatement psOwner = null;
-        PreparedStatement psCar = null;
         try {
-            con = sqlUtil.getConnection();
             con.setAutoCommit(false);
-            psOwner = con.prepareStatement(SAVE);
-
-            psOwner.setString(1, owner.getFirstName());
-            psOwner.setString(2, owner.getLastName());
-            psOwner.setDate(3, owner.getBirthDate());
-            psOwner.execute();
+            save.setString(1, owner.getFirstName());
+            save.setString(2, owner.getLastName());
+            save.setDate(3, owner.getBirthDate());
+            save.execute();
 
             List<Car> cars = owner.getCars();
             if (cars != null && cars.size() > 0) {
-                psCar = con.prepareStatement(CarDao.SAVE);
-
                 for (Car car : cars) {
-                    psCar.setInt(1, car.getOwnerId());
-                    psCar.setDate(2, car.getManufactureDate());
-                    psCar.setString(3, car.getBrand());
-                    psCar.setString(4, car.getModel());
-                    psCar.execute();
+                    saveCars.setInt(1, car.getOwnerId());
+                    saveCars.setDate(2, car.getManufactureDate());
+                    saveCars.setString(3, car.getBrand());
+                    saveCars.setString(4, car.getModel());
+                    saveCars.execute();
                 }
             }
             con.commit();
@@ -92,42 +116,14 @@ public class OwnerDao {
             }
             e.printStackTrace();
             throw new DaoException(e.getMessage());
-        } finally {
-            try {
-                if (con != null) {
-                    con.close();
-                }
-            } catch (SQLException e1) {
-                e1.printStackTrace();
-            }
-            try {
-                if (psOwner != null) {
-                    psOwner.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-            try {
-                if (psCar != null) {
-                    psCar.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
         }
     }
 
     public Owner getById(int id) throws DaoException {
-        Connection con = null;
-        PreparedStatement ps = null;
         ResultSet set = null;
         try {
-
-            con = sqlUtil.getConnection();
-            ps = con.prepareStatement(GET_BY_ID);
-
-            ps.setInt(1, id);
-            set = ps.executeQuery();
+            getById.setInt(1, id);
+            set = getById.executeQuery();
 
             if (set.next()) {
                 Owner owner = new Owner();
@@ -149,83 +145,31 @@ public class OwnerDao {
             } catch (SQLException e) {
                 e.printStackTrace();
             }
-            try {
-                if (con != null) {
-                    con.close();
-                }
-            } catch (SQLException e1) {
-                e1.printStackTrace();
-            }
-            try {
-                if (ps != null) {
-                    ps.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
         }
     }
 
     public void updateById(Owner owner) throws DaoException {
-        Connection con = null;
-        PreparedStatement ps = null;
         try {
-            con = sqlUtil.getConnection();
-            ps = con.prepareStatement(UPDATE_BY_ID);
+            updateById = con.prepareStatement(UPDATE_BY_ID);
 
-            ps.setString(1, owner.getFirstName());
-            ps.setString(2, owner.getLastName());
-            ps.setDate(3, owner.getBirthDate());
-            ps.setInt(4, owner.getId());
-            ps.executeUpdate();
+            updateById.setString(1, owner.getFirstName());
+            updateById.setString(2, owner.getLastName());
+            updateById.setDate(3, owner.getBirthDate());
+            updateById.setInt(4, owner.getId());
+            updateById.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
             throw new DaoException(e.getMessage());
-        } finally {
-            try {
-                if (con != null) {
-                    con.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-            try {
-                if (ps != null) {
-                    ps.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
         }
     }
 
     public void deleteById(int id) throws DaoException {
-        Connection con = null;
-        PreparedStatement ps = null;
         try {
-            con = sqlUtil.getConnection();
-            ps = con.prepareStatement(DELETE_BY_ID);
-
-            ps.setInt(1, id);
-            ps.execute();
+            deleteById.setInt(1, id);
+            deleteById.execute();
         } catch (SQLException e) {
             e.printStackTrace();
             throw new DaoException(e.getMessage());
-        } finally {
-            try {
-                if (con != null) {
-                    con.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-            try {
-                if (ps != null) {
-                    ps.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
         }
     }
 }
