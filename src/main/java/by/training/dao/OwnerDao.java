@@ -40,54 +40,53 @@ public class OwnerDao {
         deleteById = con.prepareStatement(DELETE_BY_ID);
     }
 
-    public void destroy() {
+    public void close() throws SQLException {
+        String message = "";
         try {
             save.close();
         } catch (SQLException e) {
-            e.printStackTrace();
+            message += e.getMessage() + "\n";
         }
         try {
             saveCars.close();
         } catch (SQLException e) {
-            e.printStackTrace();
+            message += e.getMessage() + "\n";
         }
         try {
             getById.close();
         } catch (SQLException e) {
-            e.printStackTrace();
+            message += e.getMessage() + "\n";
         }
         try {
             updateById.close();
         } catch (SQLException e) {
-            e.printStackTrace();
+            message += e.getMessage() + "\n";
         }
         try {
             deleteById.close();
         } catch (SQLException e) {
-            e.printStackTrace();
+            message += e.getMessage() + "\n";
         }
         try {
             if (con != null) {
                 con.close();
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            message += e.getMessage();
+        }
+        if (!message.isEmpty()) {
+            throw new SQLException(message);
         }
     }
 
-    public void save(Owner owner) throws DaoException {
-        try {
-            save.setString(1, owner.getFirstName());
-            save.setString(2, owner.getLastName());
-            save.setDate(3, owner.getBirthDate());
-            save.execute();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            throw new DaoException(e.getMessage());
-        }
+    public void save(Owner owner) throws SQLException {
+        save.setString(1, owner.getFirstName());
+        save.setString(2, owner.getLastName());
+        save.setDate(3, owner.getBirthDate());
+        save.execute();
     }
 
-    public void saveWithCars(Owner owner) throws DaoException {
+    public void saveWithCars(Owner owner) throws SQLException {
         try {
             con.setAutoCommit(false);
             save.setString(1, owner.getFirstName());
@@ -115,11 +114,11 @@ public class OwnerDao {
                 e1.printStackTrace();
             }
             e.printStackTrace();
-            throw new DaoException(e.getMessage());
+            throw e;
         }
     }
 
-    public Owner getById(int id) throws DaoException {
+    public Owner getById(int id) throws SQLException {
         ResultSet set = null;
         try {
             getById.setInt(1, id);
@@ -136,7 +135,7 @@ public class OwnerDao {
             return null;
         } catch (SQLException e) {
             e.printStackTrace();
-            throw new DaoException(e.getMessage());
+            throw e;
         } finally {
             try {
                 if (set != null) {
@@ -148,28 +147,17 @@ public class OwnerDao {
         }
     }
 
-    public void updateById(Owner owner) throws DaoException {
-        try {
-            updateById = con.prepareStatement(UPDATE_BY_ID);
-
-            updateById.setString(1, owner.getFirstName());
-            updateById.setString(2, owner.getLastName());
-            updateById.setDate(3, owner.getBirthDate());
-            updateById.setInt(4, owner.getId());
-            updateById.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            throw new DaoException(e.getMessage());
-        }
+    public void updateById(Owner owner) throws SQLException {
+        updateById = con.prepareStatement(UPDATE_BY_ID);
+        updateById.setString(1, owner.getFirstName());
+        updateById.setString(2, owner.getLastName());
+        updateById.setDate(3, owner.getBirthDate());
+        updateById.setInt(4, owner.getId());
+        updateById.executeUpdate();
     }
 
-    public void deleteById(int id) throws DaoException {
-        try {
-            deleteById.setInt(1, id);
-            deleteById.execute();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            throw new DaoException(e.getMessage());
-        }
+    public void deleteById(int id) throws SQLException {
+        deleteById.setInt(1, id);
+        deleteById.execute();
     }
 }
