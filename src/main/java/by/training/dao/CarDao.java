@@ -28,57 +28,61 @@ public class CarDao {
     private static final String COLUMN_BRAND = "brand";
     private static final String COLUMN_MODEL = "model";
 
-    public void init(Connection con) throws SQLException {
-        this.con = con;
-        save = con.prepareStatement(SAVE);
-        getAll = con.prepareStatement(GET_ALL);
-        updateById = con.prepareStatement(UPDATE_BY_ID);
-        deleteById = con.prepareStatement(DELETE_BY_ID);
+    public void init(Connection con) throws DaoException {
+        try {
+            this.con = con;
+            save = con.prepareStatement(SAVE);
+            getAll = con.prepareStatement(GET_ALL);
+            updateById = con.prepareStatement(UPDATE_BY_ID);
+            deleteById = con.prepareStatement(DELETE_BY_ID);
+        } catch (SQLException e) {
+            throw new DaoException(e);
+        }
+
     }
 
-    public void close() throws SQLException {
-        String message = "";
-        try {
-            save.close();
-        } catch (SQLException e) {
-            message += e.getMessage() + "\n";
+    public void close() throws DaoException {
+        DaoException exc = null;
+        exc = close(save, exc);
+        exc = close(getAll, exc);
+        exc = close(updateById, exc);
+        exc = close(deleteById, exc);
+        exc = close(con, exc);
+        if (exc != null) {
+            throw exc;
         }
+    }
+
+    private DaoException close(AutoCloseable res, DaoException common) {
         try {
-            getAll.close();
-        } catch (SQLException e) {
-            message += e.getMessage() + "\n";
-        }
-        try {
-            updateById.close();
-        } catch (SQLException e) {
-            message += e.getMessage() + "\n";
-        }
-        try {
-            deleteById.close();
-        } catch (SQLException e) {
-            message += e.getMessage() + "\n";
-        }
-        try {
-            if (con != null) {
-                con.close();
+            if (res != null) {
+                res.close();
             }
+            return common;
+        } catch (Exception e) {
+            if (common == null) {
+                common = new DaoException(e);
+            } else {
+                common.addSuppressed(e);
+            }
+            return common;
+        }
+    }
+
+    public void save(Car car) throws DaoException {
+        try {
+            save.setInt(1, car.getOwnerId());
+            save.setDate(2, car.getManufactureDate());
+            save.setString(3, car.getBrand());
+            save.setString(4, car.getModel());
+            save.execute();
         } catch (SQLException e) {
-            message += e.getMessage() + "\n";
-        }
-        if (!message.isEmpty()) {
-            throw new SQLException(message);
+            throw new DaoException(e);
         }
     }
 
-    public void save(Car car) throws SQLException {
-        save.setInt(1, car.getOwnerId());
-        save.setDate(2, car.getManufactureDate());
-        save.setString(3, car.getBrand());
-        save.setString(4, car.getModel());
-        save.execute();
-    }
-
-    public List<Car> getAll() throws SQLException {
+    public List<Car> getAll() throws DaoException {
+        DaoException exc = null;
         ResultSet set = null;
         try {
             set = getAll.executeQuery();
@@ -95,28 +99,35 @@ public class CarDao {
             }
             return list;
         } catch (SQLException e) {
-            throw e;
+            exc = new DaoException(e);
+            throw exc;
         } finally {
-            try {
-                if (set != null) {
-                    set.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
+            exc = close(set, exc);
+            if (exc != null) {
+                throw exc;
             }
         }
     }
 
-    public void updateById(Car car) throws SQLException {
-        updateById.setInt(1, car.getOwnerId());
-        updateById.setDate(2, car.getManufactureDate());
-        updateById.setString(3, car.getBrand());
-        updateById.setString(4, car.getModel());
-        updateById.executeUpdate();
+    public void updateById(Car car) throws DaoException {
+        try {
+            updateById.setInt(1, car.getOwnerId());
+            updateById.setDate(2, car.getManufactureDate());
+            updateById.setString(3, car.getBrand());
+            updateById.setString(4, car.getModel());
+            updateById.executeUpdate();
+        } catch (SQLException e) {
+            throw new DaoException(e);
+        }
+
     }
 
-    public void deleteById(int id) throws SQLException {
-        deleteById.setInt(1, id);
-        deleteById.execute();
+    public void deleteById(int id) throws DaoException {
+        try {
+            deleteById.setInt(1, id);
+            deleteById.execute();
+        } catch (SQLException e) {
+            throw new DaoException(e);
+        }
     }
 }
