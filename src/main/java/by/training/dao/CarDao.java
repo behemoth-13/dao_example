@@ -36,24 +36,25 @@ public class CarDao {
             updateById = con.prepareStatement(UPDATE_BY_ID);
             deleteById = con.prepareStatement(DELETE_BY_ID);
         } catch (SQLException e) {
-            throw new DaoException(e);
+            throw new DaoException("init error", e);
         }
 
     }
 
     public void close() throws DaoException {
+        String message = "%s close failed";
         DaoException exc = null;
-        exc = close(save, exc);
-        exc = close(getAll, exc);
-        exc = close(updateById, exc);
-        exc = close(deleteById, exc);
-        exc = close(con, exc);
+        exc = close(save, exc, String.format(message, "PreparedStatement save"));
+        exc = close(getAll, exc, String.format(message, "PreparedStatement getAll"));
+        exc = close(updateById, exc, String.format(message, "PreparedStatement updateById"));
+        exc = close(deleteById, exc, String.format(message, "PreparedStatement deleteById"));
+        exc = close(con, exc, String.format(message, "Connection"));
         if (exc != null) {
             throw exc;
         }
     }
 
-    private DaoException close(AutoCloseable res, DaoException common) {
+    private DaoException close(AutoCloseable res, DaoException common, String message) {
         try {
             if (res != null) {
                 res.close();
@@ -61,7 +62,7 @@ public class CarDao {
             return common;
         } catch (Exception e) {
             if (common == null) {
-                common = new DaoException(e);
+                common = new DaoException(message, e);
             } else {
                 common.addSuppressed(e);
             }
@@ -77,7 +78,7 @@ public class CarDao {
             save.setString(4, car.getModel());
             save.execute();
         } catch (SQLException e) {
-            throw new DaoException(e);
+            throw new DaoException("Error in save", e);
         }
     }
 
@@ -99,10 +100,10 @@ public class CarDao {
             }
             return list;
         } catch (SQLException e) {
-            exc = new DaoException(e);
+            exc = new DaoException("Error in getAll", e);
             throw exc;
         } finally {
-            exc = close(set, exc);
+            exc = close(set, exc, "Result set is not closed");
             if (exc != null) {
                 throw exc;
             }
@@ -117,7 +118,7 @@ public class CarDao {
             updateById.setString(4, car.getModel());
             updateById.executeUpdate();
         } catch (SQLException e) {
-            throw new DaoException(e);
+            throw new DaoException("Error in updateById", e);
         }
 
     }
@@ -127,7 +128,7 @@ public class CarDao {
             deleteById.setInt(1, id);
             deleteById.execute();
         } catch (SQLException e) {
-            throw new DaoException(e);
+            throw new DaoException("Error in deleteById", e);
         }
     }
 }

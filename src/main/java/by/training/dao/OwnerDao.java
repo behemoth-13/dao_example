@@ -38,24 +38,25 @@ public class OwnerDao {
             updateById = con.prepareStatement(UPDATE_BY_ID);
             deleteById = con.prepareStatement(DELETE_BY_ID);
         } catch (SQLException e) {
-            throw new DaoException(e);
+            throw new DaoException("init error", e);
         }
     }
 
     public void close() throws DaoException {
+        String message = "%s close failed";
         DaoException exc = null;
-        exc = close(save, exc);
-        exc = close(saveCars, exc);
-        exc = close(getById, exc);
-        exc = close(updateById, exc);
-        exc = close(deleteById, exc);
-        exc = close(con, exc);
+        exc = close(save, exc, String.format(message, "PreparedStatement save"));
+        exc = close(saveCars, exc, String.format(message, "PreparedStatement saveCars"));
+        exc = close(getById, exc, String.format(message, "PreparedStatement getById"));
+        exc = close(updateById, exc, String.format(message, "PreparedStatement updateById"));
+        exc = close(deleteById, exc, String.format(message, "PreparedStatement deleteById"));
+        exc = close(con, exc, String.format(message, "Connection"));
         if (exc != null) {
             throw exc;
         }
     }
 
-    private DaoException close(AutoCloseable res, DaoException common) {
+    private DaoException close(AutoCloseable res, DaoException common, String message) {
         try {
             if (res != null) {
                 res.close();
@@ -63,7 +64,7 @@ public class OwnerDao {
             return common;
         } catch (Exception e) {
             if (common == null) {
-                common = new DaoException(e);
+                common = new DaoException(message, e);
             } else {
                 common.addSuppressed(e);
             }
@@ -78,7 +79,7 @@ public class OwnerDao {
             save.setDate(3, owner.getBirthDate());
             save.execute();
         } catch (SQLException e) {
-            throw new DaoException(e);
+            throw new DaoException("Error in save",e);
         }
     }
 
@@ -102,7 +103,7 @@ public class OwnerDao {
             }
             con.commit();
         } catch (SQLException e) {
-            DaoException exc = new DaoException(e);
+            DaoException exc = new DaoException("Error in saveWithCars",e);
             try {
                 if (con != null) {
                     con.rollback();
@@ -131,10 +132,10 @@ public class OwnerDao {
             }
             return null;
         }  catch (SQLException e) {
-            exc = new DaoException(e);
+            exc = new DaoException("Error in getById", e);
             throw exc;
         } finally {
-            exc = close(set, exc);
+            exc = close(set, exc,"Result set is not closed");
             if (exc != null) {
                 throw exc;
             }
@@ -150,7 +151,7 @@ public class OwnerDao {
             updateById.setInt(4, owner.getId());
             updateById.executeUpdate();
         } catch (SQLException e) {
-            throw new DaoException(e);
+            throw new DaoException("Error in updateById", e);
         }
     }
 
@@ -159,7 +160,7 @@ public class OwnerDao {
             deleteById.setInt(1, id);
             deleteById.execute();
         } catch (SQLException e) {
-            throw new DaoException(e);
+            throw new DaoException("Error in deleteById", e);
         }
     }
 }
