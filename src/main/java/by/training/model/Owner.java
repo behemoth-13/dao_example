@@ -1,7 +1,7 @@
 package by.training.model;
 
 
-import java.sql.Date;
+import java.util.Date;
 import java.util.List;
 
 public class Owner {

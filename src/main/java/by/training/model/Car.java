@@ -1,6 +1,6 @@
 package by.training.model;
 
-import java.sql.Date;
+import java.util.Date;
 
 public class Car {
     private int id;
