@@ -20,8 +20,12 @@ public class MySqlUtil {
         return instance;
     }
 
+    public void init() throws IOException {
+        init("db.properties");
+    }
+
     public void init(String filename) throws IOException {
-        InputStream inputStream = this.getClass().getResourceAsStream("db.properties");
+        InputStream inputStream = this.getClass().getResourceAsStream(filename);
         Properties props = new Properties();
         props.load(inputStream);
         String url = props.getProperty("url");
