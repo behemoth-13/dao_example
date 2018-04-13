@@ -2,6 +2,7 @@ package by.training.dao;
 
 import by.training.model.Owner;
 
+import java.io.IOException;
 import java.sql.*;
 
 public class OwnerDao {
@@ -19,9 +20,15 @@ public class OwnerDao {
             " = %s, " + BIRTH_DATE + " = %tF WHERE " + ID + " = %d";
     private static final String DELETE_BY_ID = "DELETE FROM owner WHERE " + ID + " = %d";
 
-    private MySqlUtil util = MySqlUtil.getInstance();
+    private MySqlUtil util;
 
+    public OwnerDao() throws IOException {
+        util = MySqlUtil.getInstance("db.properties");
+    }
 
+    public OwnerDao(String filename) throws IOException {
+        util = MySqlUtil.getInstance(filename);
+    }
 
     public void save(Owner owner) throws DaoException {
         try (Connection con = util.getConnection();

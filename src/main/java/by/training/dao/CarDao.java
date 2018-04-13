@@ -2,6 +2,7 @@ package by.training.dao;
 
 import by.training.model.Car;
 
+import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +22,15 @@ public class CarDao {
             BRAND + " = %s, " + MODEL + " = %s WHERE " + ID + " = %d";
     private static final String DELETE_BY_ID = "DELETE FROM car WHERE " + ID + " = %d";
 
-    private MySqlUtil util = MySqlUtil.getInstance();
+    private MySqlUtil util;
+
+    public CarDao() throws IOException {
+        util = MySqlUtil.getInstance("db.properties");
+    }
+
+    public CarDao(String filename) throws IOException {
+        util = MySqlUtil.getInstance(filename);
+    }
 
 
 

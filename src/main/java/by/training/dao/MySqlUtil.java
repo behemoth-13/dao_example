@@ -10,21 +10,24 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 public class MySqlUtil {
-    private static MySqlUtil instance = new MySqlUtil();
+    private static volatile MySqlUtil instance;
 
     private ComboPooledDataSource dataSource;
 
-    private MySqlUtil() {}
-
-    public static MySqlUtil getInstance() {
-        return instance;
+    public static MySqlUtil getInstance(String filename) throws IOException {
+        MySqlUtil localInstance = instance;
+        if (localInstance == null) {
+            synchronized (MySqlUtil.class) {
+                localInstance = instance;
+                if (localInstance == null) {
+                    instance = localInstance = new MySqlUtil(filename);
+                }
+            }
+        }
+        return localInstance;
     }
 
-    public void init() throws IOException {
-        init("db.properties");
-    }
-
-    public void init(String filename) throws IOException {
+    private MySqlUtil(String filename) throws IOException {
         InputStream inputStream = this.getClass().getResourceAsStream(filename);
         Properties props = new Properties();
         props.load(inputStream);
