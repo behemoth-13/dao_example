@@ -2,7 +2,6 @@ package by.training.dao;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
