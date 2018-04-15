@@ -15,7 +15,7 @@ public class CarDao {
     private static final String MODEL = "model";
 
     private static final String SAVE = "INSERT INTO car(" + OWNER_ID + ", " + MANUFACTURE_DATE + ", " + BRAND + ", " +
-            MODEL + ") VALUES(%d, %tF, %s, %s)";
+            MODEL + ") VALUES(%d, '%tF', '%s', '%s')";
     private static final String GET_ALL = "SELECT " + ID +" , " + OWNER_ID + ", " + MANUFACTURE_DATE + ", " + BRAND +
             ", " + MODEL + " FROM car";
     private static final String UPDATE_BY_ID = "UPDATE car SET "+ OWNER_ID +" = %d, " + MANUFACTURE_DATE + " = %tF, " +
@@ -39,6 +39,7 @@ public class CarDao {
              Statement stmt = con.createStatement()) {
 
             String query = String.format(SAVE, car.getOwnerId(), car.getManufactureDate(), car.getBrand(), car.getModel());
+            System.out.println(query);
             stmt.execute(query);
         } catch (SQLException e) {
             throw new DaoException("Error in save", e);
